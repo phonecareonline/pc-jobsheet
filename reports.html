@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Reports Dashboard - Phone Care</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="reports-styles.css" rel="stylesheet">
+    <script src="firebase-config.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="reports-header">
+        <div class="header-content">
+            <div class="logo-section">
+                
+                <div class="brand-info">
+                    <h1>Phone Care</h1>
+                    <p>Daily Reports Dashboard</p>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="date-selector">
+                    <label for="reportDate">Report Date:</label>
+                    <input type="date" id="reportDate" class="date-input">
+                    <button id="refreshReports" class="refresh-btn">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+                <div class="current-time">
+                    <div class="time-display" id="currentDateTime">Loading...</div>
+                    <div class="report-status">Live Data • <span id="dataRange">Today</span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Dashboard Stats -->
+    <section class="summary-section">
+        <div class="summary-container">
+            <!-- Revenue Card -->
+            <div class="summary-card revenue">
+                <div class="summary-card-content">
+                    <div class="card-icon-wrapper">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div class="card-main-content">
+                        <div class="card-amount" id="totalRevenue">₹0</div>
+                        <div class="card-label">Total Revenue</div>
+                        <div class="card-breakdown">
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Cash</div>
+                                <div class="breakdown-value" id="cashRevenue">₹0</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Digital</div>
+                                <div class="breakdown-value" id="onlineRevenue">₹0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Handovers Card -->
+            <div class="summary-card handovers">
+                <div class="summary-card-content">
+                    <div class="card-icon-wrapper">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <div class="card-main-content">
+                        <div class="card-amount" id="totalHandovers">0</div>
+                        <div class="card-label">Devices Handovered</div>
+                        <div class="card-breakdown">
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Normal</div>
+                                <div class="breakdown-value" id="normalPriorityHandovers">0</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Urgent</div>
+                                <div class="breakdown-value" id="urgentPriorityHandovers">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Returns Card -->
+            <div class="summary-card returns">
+                <div class="summary-card-content">
+                    <div class="card-icon-wrapper">
+                        <i class="fas fa-undo-alt"></i>
+                    </div>
+                    <div class="card-main-content">
+                        <div class="card-amount" id="totalReturns">0</div>
+                        <div class="card-label">Devices Returned</div>
+                        <div class="card-breakdown">
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Non-Repairable</div>
+                                <div class="breakdown-value" id="nonRepairableReturns">0</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Other</div>
+                                <div class="breakdown-value" id="otherReturns">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profit Card -->
+            <div class="summary-card profit">
+                <div class="summary-card-content">
+                    <div class="card-icon-wrapper">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="card-main-content">
+                        <div class="card-amount" id="grossProfit">₹0</div>
+                        <div class="card-label">Gross Profit</div>
+                        <div class="card-breakdown">
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Margin</div>
+                                <div class="breakdown-value" id="profitMargin">0%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Avg Ticket</div>
+                                <div class="breakdown-value" id="avgTicketValue">₹0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="handovered">
+                <i class="fas fa-check-circle"></i>
+                <span>Handovers</span>
+                <div class="tab-count" id="handoveredCount">0</div>
+            </button>
+            <button class="tab-btn" data-tab="returned">
+                <i class="fas fa-times-circle"></i>
+                <span>Returns</span>
+                <div class="tab-count" id="returnedCount">0</div>
+            </button>
+            <button class="tab-btn" data-tab="payments">
+                <i class="fas fa-credit-card"></i>
+                <span>Payments</span>
+                <div class="tab-count" id="paymentsCount">0</div>
+            </button>
+            <button class="tab-btn" data-tab="accounting">
+                <i class="fas fa-calculator"></i>
+                <span>Accounting</span>
+                <div class="tab-count">📊</div>
+            </button>
+        </div>
+
+        <!-- Handovers Tab -->
+        <div id="handoveredTab" class="tab-content active">
+            <div class="table-header">
+                <h2><i class="fas fa-handshake"></i> Devices Handovered Today</h2>
+                <div class="table-actions">
+                    <button id="exportHandovered" class="btn export-btn">
+                        <i class="fas fa-download"></i>
+                        Export CSV
+                    </button>
+                    <button id="printHandovered" class="btn print-btn">
+                        <i class="fas fa-print"></i>
+                        Print
+                    </button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>Customer Details</th>
+                            <th>Device Info</th>
+                            <th>Parts Used</th>
+                            <th>Service Cost</th>
+                            <th>Payment Method</th>
+                            <th>Handover Time</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="handoveredTable">
+                        <tr><td colspan="8" style="text-align: center; padding: 2rem; color: #718096;">Loading handovered devices...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Returns Tab -->
+        <div id="returnedTab" class="tab-content">
+            <div class="table-header">
+                <h2><i class="fas fa-undo-alt"></i> Devices Returned Today</h2>
+                <div class="table-actions">
+                    <button id="exportReturned" class="btn export-btn">
+                        <i class="fas fa-download"></i>
+                        Export CSV
+                    </button>
+                    <button id="printReturned" class="btn print-btn">
+                        <i class="fas fa-print"></i>
+                        Print
+                    </button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>Customer Details</th>
+                            <th>Device Info</th>
+                            <th>Problem</th>
+                            <th>Return Reason</th>
+                            <th>Return Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="returnedTable">
+                        <tr><td colspan="7" style="text-align: center; padding: 2rem; color: #718096;">Loading returned devices...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Payments Tab -->
+        <div id="paymentsTab" class="tab-content">
+            <div class="table-header">
+                <h2><i class="fas fa-credit-card"></i> Payment Details Today</h2>
+                <div class="table-actions">
+                    <button id="exportPayments" class="btn export-btn">
+                        <i class="fas fa-download"></i>
+                        Export CSV
+                    </button>
+                    <button id="printPayments" class="btn print-btn">
+                        <i class="fas fa-print"></i>
+                        Print
+                    </button>
+                </div>
+            </div>
+            
+            <div class="payment-breakdown">
+                <div class="breakdown-card">
+                    <div class="card-icon-wrapper">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div>
+                        <h3 id="cashRevenue2">₹0</h3>
+                        <p>Cash Payments</p>
+                    </div>
+                </div>
+                <!-- <div class="breakdown-card">
+                    <div class="card-icon-wrapper">
+                        <i class="fab fa-google-pay"></i>
+                    </div>
+                    <div>
+                        <h3 id="onlineRevenue2">₹0</h3>
+                        <p>Online/UPI Payments</p>
+                    </div>
+                </div> -->
+                <div class="breakdown-card">
+                    <div class="card-icon-wrapper">
+                        <i class="fab fa-google-pay"></i>
+                    </div>
+                    <div>
+                        <h3 id="cardRevenue">₹0</h3>
+                        <p>Online/UPI Payments</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Ticket ID</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsTable">
+                        <tr><td colspan="7" style="text-align: center; padding: 2rem; color: #718096;">Loading payment details...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Accounting Tab -->
+        <div id="accountingTab" class="tab-content">
+            <div class="table-header">
+                <h2><i class="fas fa-calculator"></i> Daily Accounting Summary</h2>
+                <div class="table-actions">
+                    <button id="exportAccounting" class="btn export-btn">
+                        <i class="fas fa-download"></i>
+                        Export Full Report
+                    </button>
+                    <button id="printAccounting" class="btn print-btn">
+                        <i class="fas fa-print"></i>
+                        Print Summary
+                    </button>
+                </div>
+            </div>
+
+            <div class="accounting-grid">
+                <div class="accounting-section">
+                    <h3><i class="fas fa-arrow-up"></i> Revenue Breakdown</h3>
+                    <div class="accounting-item">
+                        <span>Service Revenue</span>
+                        <strong id="serviceRevenue">₹0</strong>
+                    </div>
+                    <div class="accounting-item">
+                        <span>Parts Revenue</span>
+                        <strong id="partsRevenue">₹0</strong>
+                    </div>
+                    <div class="accounting-item">
+                        <span><strong>Total Revenue</strong></span>
+                        <strong id="totalRevenueSummary">₹0</strong>
+                    </div>
+                </div>
+
+                <div class="accounting-section">
+                    <h3><i class="fas fa-arrow-down"></i> Cost Analysis</h3>
+                    <div class="accounting-item">
+                        <span>Parts Cost</span>
+                        <strong id="partsCost">₹0</strong>
+                    </div>
+                    <div class="accounting-item">
+                        <span>Return Losses</span>
+                        <strong id="returnLosses">₹0</strong>
+                    </div>
+                    <div class="accounting-item">
+                        <span><strong>Total Costs</strong></span>
+                        <strong id="totalCosts">₹0</strong>
+                    </div>
+                </div>
+
+                <div class="accounting-section">
+                    <h3><i class="fas fa-chart-line"></i> Profitability</h3>
+                    <div class="accounting-item">
+                        <span>Gross Profit</span>
+                        <strong id="grossProfitSummary">₹0</strong>
+                    </div>
+                    <div class="accounting-item">
+                        <span>Profit Margin</span>
+                        <strong id="profitMarginSummary">0%</strong>
+                    </div>
+                    <div class="accounting-item">
+                        <span>Avg Ticket Value</span>
+                        <strong id="avgTicketValueSummary">₹0</strong>
+                    </div>
+                </div>
+
+                <div class="accounting-section">
+                    <h3><i class="fas fa-tasks"></i> Performance Metrics</h3>
+                    <div class="accounting-item">
+                        <span>Successful Repairs</span>
+                        <strong id="successfulRepairs">0</strong>
+                    </div>
+                    <div class="accounting-item">
+                        <span>Returned Devices</span>
+                        <strong id="returnedDevices">0</strong>
+                    </div>
+                    <div class="accounting-item">
+                        <span>Success Rate</span>
+                        <strong id="successRate">0%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <button id="backToDashboard" class="btn back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Dashboard
+        </button>
+        <div class="report-info">
+            <span>Report Generated: <span id="reportGeneratedTime">Loading...</span></span>
+            <span>Last Refresh: <span id="lastRefreshTime">--</span></span>
+        </div>
+    </footer>
+
+    <!-- Notification System -->
+    <div id="notificationContainer"></div>
+
+    <script type="module" src="reports.js"></script>
+</body>
+</html>
