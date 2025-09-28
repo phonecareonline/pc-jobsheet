@@ -202,50 +202,76 @@ function switchTab(tabName) {
     updateTabCounts();
 }
 
-// Load all reports data
 async function loadReportsData() {
-    const selectedDate = document.getElementById('reportDate')?.value;
-    
-    if (!selectedDate) {
-        console.error('❌ No date selected');
-        showNotification('No date selected for report', 'error');
-        return;
-    }
-    
-    const reportDate = new Date(selectedDate);
-    reportDate.setHours(0, 0, 0, 0);
-    const nextDay = new Date(reportDate);
-    nextDay.setDate(nextDay.getDate() + 1);
-    
     try {
-        // Show loading indicators
+        console.log('📊 Starting to load reports data...');
         showLoadingState();
-        console.log(`📊 Loading reports data for ${selectedDate}`);
         
-        // Load data in parallel
-        await Promise.all([
-            loadHandoveredDevices(reportDate, nextDay),
-            loadReturnedDevices(reportDate, nextDay),
-            loadPaymentDetails(reportDate, nextDay)
+        // Get selected date or use today
+        const reportDate = document.getElementById('reportDate');
+        const selectedDate = reportDate ? reportDate.value : new Date().toISOString().split('T')[0];
+        
+        // Calculate date range for the selected day
+        const startDate = new Date(selectedDate);
+        startDate.setHours(0, 0, 0, 0);
+        
+        const endDate = new Date(selectedDate);
+        endDate.setHours(23, 59, 59, 999);
+        
+        console.log('📅 Date range:', { startDate, endDate });
+        
+        // Load all data concurrently
+        const [paymentDataWithSplits] = await Promise.all([
+            loadPaymentDataWithSplits(startDate, endDate),
+            loadHandoveredDevices(startDate, endDate),
+            loadReturnedDevices(startDate, endDate),
+            loadPaymentDetails(startDate, endDate)
         ]);
         
-        // Calculate summaries
+        console.log('💰 Payment data loaded:', paymentDataWithSplits);
+        
+        // Calculate summary from loaded data
         calculateSummaryData();
         
-        // Update displays
+        // Update summary with split payment data
+        updateSummaryWithSplitData(paymentDataWithSplits);
+        
+        // Update all displays
         updateAllDisplays();
+        
+        // Display revenue breakdown
+        displayRevenueBreakdown({
+            total: paymentDataWithSplits.total.amount,
+            cash: paymentDataWithSplits.cash.amount,
+            upi: paymentDataWithSplits.upi.amount,
+            card: paymentDataWithSplits.card.amount,
+            transactionCount: paymentDataWithSplits.total.count,
+            breakdown: paymentDataWithSplits
+        });
         
         console.log('✅ Reports data loaded successfully');
         showNotification('Reports data loaded successfully', 'success');
-        safeUpdateElement('lastRefreshTime', new Date().toLocaleTimeString('en-IN'));
         
     } catch (error) {
         console.error('❌ Error loading reports data:', error);
-        showErrorState(`Failed to load reports data: ${error.message}`);
-        showNotification(`Failed to load reports data: ${error.message}`, 'error');
+        showErrorState('Failed to load reports data');
+        showNotification('Failed to load reports data', 'error');
     }
 }
-
+function updateSummaryWithSplitData(paymentData) {
+    // Update the summary object with split payment data
+    reportsData.summary.cashRevenue = paymentData.cash.amount;
+    reportsData.summary.onlineRevenue = paymentData.upi.amount;
+    reportsData.summary.cardRevenue = paymentData.card.amount;
+    reportsData.summary.totalRevenue = paymentData.total.amount;
+    
+    console.log('🔄 Updated summary with split data:', {
+        cash: reportsData.summary.cashRevenue,
+        online: reportsData.summary.onlineRevenue,
+        card: reportsData.summary.cardRevenue,
+        total: reportsData.summary.totalRevenue
+    });
+}
 // Load handovered devices
 async function loadHandoveredDevices(startDate, endDate) {
     try {
@@ -546,7 +572,272 @@ function updatePaymentsTable() {
         `).join('') : 
         '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #718096;">No payment records found for selected date</td></tr>';
 }
-
+// Add this function to load and categorize payment data
+async function loadPaymentDataWithSplits(startDate, endDate) {
+    try {
+        console.log('💳 Loading payment data with splits...', { startDate, endDate });
+        
+        // Validate date parameters
+        if (!startDate || !endDate) {
+            throw new Error('Start date and end date are required');
+        }
+        
+        // Ensure dates are Date objects
+        const start = startDate instanceof Date ? startDate : new Date(startDate);
+        const end = endDate instanceof Date ? endDate : new Date(endDate);
+        
+        console.log('📅 Converted dates:', { start, end });
+        
+        const paymentsQuery = query(
+            collection(db, 'payment_logs'),
+            where('timestamp', '>=', Timestamp.fromDate(start)),
+            where('timestamp', '<', Timestamp.fromDate(end)),
+            orderBy('timestamp', 'desc')
+        );
+        
+        const snapshot = await getDocs(paymentsQuery);
+        console.log(`📥 Found ${snapshot.size} payment log entries`);
+        
+        const paymentData = {
+            cash: { amount: 0, count: 0, transactions: [] },
+            upi: { amount: 0, count: 0, transactions: [] },
+            card: { amount: 0, count: 0, transactions: [] },
+            total: { amount: 0, count: 0 }
+        };
+        
+        const processedTickets = new Set();
+        let totalProcessed = 0;
+        
+        snapshot.forEach(doc => {
+            const payment = { id: doc.id, ...doc.data() };
+            const method = payment.method?.toLowerCase() || 'unknown';
+            const amount = parseFloat(payment.amount) || 0;
+            
+            totalProcessed++;
+            console.log(`Processing payment ${totalProcessed}:`, {
+                ticketId: payment.ticketId,
+                method,
+                amount,
+                type: payment.type
+            });
+            
+            // Map method names to consistent keys
+            let methodKey = method;
+            if (method === 'online' || method === 'upi/online') {
+                methodKey = 'upi';
+            }
+            
+            // Add to appropriate category if method exists
+            if (paymentData[methodKey]) {
+                paymentData[methodKey].amount += amount;
+                paymentData[methodKey].transactions.push(payment);
+                
+                // Count transactions properly
+                if (payment.type === 'split_payment') {
+                    // For split payments, only count unique tickets once per method
+                    const ticketMethodKey = `${payment.ticketId}-${methodKey}`;
+                    if (!processedTickets.has(ticketMethodKey)) {
+                        paymentData[methodKey].count += 1;
+                        processedTickets.add(ticketMethodKey);
+                    }
+                } else {
+                    // For single payments, count each transaction
+                    paymentData[methodKey].count += 1;
+                }
+            } else {
+                console.warn(`Unknown payment method: ${method}, defaulting to cash`);
+                // Default unknown methods to cash
+                paymentData.cash.amount += amount;
+                paymentData.cash.transactions.push(payment);
+                paymentData.cash.count += 1;
+            }
+            
+            // Add to total
+            paymentData.total.amount += amount;
+        });
+        
+        // Calculate total unique transactions
+        const uniqueTickets = new Set();
+        snapshot.forEach(doc => {
+            const payment = doc.data();
+            if (payment.ticketId) {
+                uniqueTickets.add(payment.ticketId);
+            }
+        });
+        
+        paymentData.total.count = uniqueTickets.size;
+        
+        console.log('💰 Payment data processed:', {
+            cash: `₹${paymentData.cash.amount} (${paymentData.cash.count} transactions)`,
+            upi: `₹${paymentData.upi.amount} (${paymentData.upi.count} transactions)`,
+            card: `₹${paymentData.card.amount} (${paymentData.card.count} transactions)`,
+            total: `₹${paymentData.total.amount} (${paymentData.total.count} unique tickets)`
+        });
+        
+        return paymentData;
+        
+    } catch (error) {
+        console.error('❌ Error loading payment data with splits:', error);
+        
+        // Return empty structure on error
+        return {
+            cash: { amount: 0, count: 0, transactions: [] },
+            upi: { amount: 0, count: 0, transactions: [] },
+            card: { amount: 0, count: 0, transactions: [] },
+            total: { amount: 0, count: 0 }
+        };
+    }
+}
+// Update your existing daily revenue function
+async function calculateDailyRevenue(date) {
+    try {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        const paymentData = await loadPaymentDataWithSplits(startOfDay, endOfDay);
+        
+        return {
+            total: paymentData.total.amount,
+            cash: paymentData.cash.amount,
+            upi: paymentData.upi.amount,
+            card: paymentData.card.amount,
+            transactionCount: paymentData.total.count,
+            breakdown: {
+                cash: { amount: paymentData.cash.amount, count: paymentData.cash.count },
+                upi: { amount: paymentData.upi.amount, count: paymentData.upi.count },
+                card: { amount: paymentData.card.amount, count: paymentData.card.count }
+            }
+        };
+        
+    } catch (error) {
+        console.error('❌ Error calculating daily revenue:', error);
+        return {
+            total: 0, cash: 0, upi: 0, card: 0, transactionCount: 0,
+            breakdown: { 
+                cash: { amount: 0, count: 0 }, 
+                upi: { amount: 0, count: 0 }, 
+                card: { amount: 0, count: 0 } 
+            }
+        };
+    }
+}
+function displayRevenueBreakdown(revenueData) {
+    const container = document.getElementById('revenueBreakdown');
+    
+    if (!container) {
+        console.warn('Revenue breakdown container not found, creating it...');
+        // Create container if it doesn't exist
+        const newContainer = document.createElement('div');
+        newContainer.id = 'revenueBreakdown';
+        newContainer.style.marginTop = '2rem';
+        
+        // Try to find a suitable parent element
+        const summarySection = document.querySelector('.summary-section') || 
+                              document.querySelector('.tab-content.active') ||
+                              document.body;
+        summarySection.appendChild(newContainer);
+        return displayRevenueBreakdown(revenueData); // Retry
+    }
+    
+    // Avoid division by zero
+    const total = revenueData.total || 1;
+    
+    container.innerHTML = `
+        <div class="revenue-summary">
+            <div class="revenue-total">
+                <h3>Total Revenue: ₹${revenueData.total.toLocaleString('en-IN')}</h3>
+                <p>${revenueData.transactionCount} transactions</p>
+            </div>
+            
+            <div class="revenue-breakdown">
+                <div class="payment-method-card cash">
+                    <div class="method-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="method-details">
+                        <h4>Cash Payments</h4>
+                        <div class="amount">₹${revenueData.cash.toLocaleString('en-IN')}</div>
+                        <div class="count">${revenueData.breakdown?.cash?.count || 0} transactions</div>
+                        <div class="percentage">${total > 0 ? ((revenueData.cash / total) * 100).toFixed(1) : 0}%</div>
+                    </div>
+                </div>
+                
+                <div class="payment-method-card upi">
+                    <div class="method-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="method-details">
+                        <h4>UPI/Online</h4>
+                        <div class="amount">₹${revenueData.upi.toLocaleString('en-IN')}</div>
+                        <div class="count">${revenueData.breakdown?.upi?.count || 0} transactions</div>
+                        <div class="percentage">${total > 0 ? ((revenueData.upi / total) * 100).toFixed(1) : 0}%</div>
+                    </div>
+                </div>
+                
+                <div class="payment-method-card card">
+                    <div class="method-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="method-details">
+                        <h4>Card/POS</h4>
+                        <div class="amount">₹${revenueData.card.toLocaleString('en-IN')}</div>
+                        <div class="count">${revenueData.breakdown?.card?.count || 0} transactions</div>
+                        <div class="percentage">${total > 0 ? ((revenueData.card / total) * 100).toFixed(1) : 0}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    console.log('📊 Revenue breakdown displayed');
+}
+// Update your existing report generation
+async function generatePaymentReport(startDate, endDate) {
+    try {
+        showLoading('Generating payment report...');
+        
+        const paymentData = await loadPaymentDataWithSplits(startDate, endDate);
+        
+        // Generate detailed report
+        const reportData = {
+            period: `${startDate.toLocaleDateString('en-IN')} - ${endDate.toLocaleDateString('en-IN')}`,
+            summary: {
+                totalRevenue: paymentData.total.amount,
+                totalTransactions: paymentData.total.count,
+                averageTransaction: paymentData.total.count > 0 ? 
+                    (paymentData.total.amount / paymentData.total.count) : 0
+            },
+            breakdown: {
+                cash: paymentData.cash,
+                upi: paymentData.upi,
+                card: paymentData.card
+            },
+            transactions: []
+        };
+        
+        // Combine all transactions and sort by timestamp
+        const allTransactions = [
+            ...paymentData.cash.transactions,
+            ...paymentData.upi.transactions,
+            ...paymentData.card.transactions
+        ].sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate());
+        
+        reportData.transactions = allTransactions;
+        
+        displayPaymentReport(reportData);
+        hideLoading();
+        
+        return reportData;
+        
+    } catch (error) {
+        console.error('Error generating payment report:', error);
+        hideLoading();
+        showNotification('Failed to generate payment report', 'error');
+    }
+}
 // Show loading state
 // function showLoadingState() {
 //     document.querySelectorAll('.summary-card').forEach(card => {

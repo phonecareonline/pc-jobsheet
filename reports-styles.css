@@ -622,3 +622,152 @@ body {
         display: block;
     }
 }
+.revenue-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.payment-method-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #e2e8f0;
+    transition: transform 0.2s ease;
+}
+
+.payment-method-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.payment-method-card.cash {
+    border-left-color: #38a169;
+}
+
+.payment-method-card.upi {
+    border-left-color: #3182ce;
+}
+
+.payment-method-card.card {
+    border-left-color: #805ad5;
+}
+
+.method-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.cash .method-icon { color: #38a169; }
+.upi .method-icon { color: #3182ce; }
+.card .method-icon { color: #805ad5; }
+
+.method-details h4 {
+    margin-bottom: 0.5rem;
+    color: #2d3748;
+}
+
+.amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.25rem;
+}
+
+.count {
+    font-size: 0.9rem;
+    color: #718096;
+    margin-bottom: 0.25rem;
+}
+
+.percentage {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4a5568;
+}
+/* Revenue Breakdown Styles */
+.revenue-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.payment-method-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #e2e8f0;
+    transition: transform 0.2s ease;
+}
+
+.payment-method-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.payment-method-card.cash {
+    border-left-color: #38a169;
+}
+
+.payment-method-card.upi {
+    border-left-color: #3182ce;
+}
+
+.payment-method-card.card {
+    border-left-color: #805ad5;
+}
+
+.method-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.cash .method-icon { color: #38a169; }
+.upi .method-icon { color: #3182ce; }
+.card .method-icon { color: #805ad5; }
+
+.method-details h4 {
+    margin-bottom: 0.5rem;
+    color: #2d3748;
+}
+
+.amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.25rem;
+}
+
+.count {
+    font-size: 0.9rem;
+    color: #718096;
+    margin-bottom: 0.25rem;
+}
+
+.percentage {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.revenue-summary {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.revenue-total {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.revenue-total h3 {
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}

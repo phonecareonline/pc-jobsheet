@@ -6,6 +6,7 @@
     <title>PhoneCare Smart Onboarding Panel</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="add.png" type="image/png">
 </head>
 <body>
     <!-- Header -->
@@ -303,13 +304,35 @@
         <div class="modal-body">
             <div id="paymentDeviceDetails"></div>
             
-            <!-- Enhanced section for amount and payment method -->
+            <!-- Payment Mode Selection -->
             <div class="form-section" style="margin-top: 1.5rem;">
-                <h4><i class="fas fa-calculator"></i> Payment Details</h4>
+                <h4><i class="fas fa-calculator"></i> Payment Collection</h4>
                 
+                <div class="payment-mode-selector">
+                    <label class="payment-mode-option">
+                        <input type="radio" name="paymentMode" value="single" checked>
+                        <span class="radio-custom"></span>
+                        <div class="mode-info">
+                            <strong>Single Payment</strong>
+                            <p>Customer pays using one method</p>
+                        </div>
+                    </label>
+                    <label class="payment-mode-option">
+                        <input type="radio" name="paymentMode" value="split">
+                        <span class="radio-custom"></span>
+                        <div class="mode-info">
+                            <strong>Split Payment</strong>
+                            <p>Customer pays using multiple methods</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Single Payment Section -->
+            <div id="singlePaymentSection" class="payment-section">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="finalAmount">Final Collected Amount:</label>
+                        <label for="finalAmount">Final Amount:</label>
                         <input type="number" id="finalAmount" placeholder="Enter amount in ₹" min="0" step="0.01">
                     </div>
                     
@@ -318,14 +341,55 @@
                         <select id="paymentMethod" required>
                             <option value="">Select payment method</option>
                             <option value="cash">Cash</option>
-                            <option value="card">Online/UPI</option>
-                            <!-- <option value="card">Card/POS</option> -->
+                            <option value="upi">UPI/Online</option>
+                            <option value="card">Card/POS</option>
                         </select>
                     </div>
                 </div>
             </div>
+
+            <!-- Split Payment Section -->
+            <div id="splitPaymentSection" class="payment-section" style="display: none;">
+                <div class="split-payment-header">
+                    <div class="total-amount-display">
+                        <label for="splitTotalAmount">Total Amount to Collect:</label>
+                        <input type="number" id="splitTotalAmount" placeholder="Enter total amount in ₹" min="0" step="0.01" class="total-amount-input">
+                    </div>
+                </div>
+
+                <div class="split-payments-container">
+                    <h5><i class="fas fa-divide"></i> Split Payments</h5>
+                    <div id="splitPaymentsList">
+                        <!-- Split payment items will be added here -->
+                    </div>
+                    
+                    <button type="button" id="addSplitPayment" class="btn secondary add-split-btn">
+                        <i class="fas fa-plus"></i> Add Payment Method
+                    </button>
+                </div>
+
+                <div class="split-payment-summary">
+                    <div class="summary-row">
+                        <span>Total Amount:</span>
+                        <span id="summaryTotal">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Collected:</span>
+                        <span id="summaryCollected">₹0</span>
+                    </div>
+                    <div class="summary-row balance-row">
+                        <span>Remaining:</span>
+                        <span id="summaryRemaining">₹0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-notes-section">
+                <label for="paymentNotes">Payment Notes (Optional):</label>
+                <textarea id="paymentNotes" rows="2" placeholder="Any additional notes about the payment..."></textarea>
+            </div>
             
-            <p><strong>This payment will be recorded and the device will be removed from pending list.</strong></p>
+            <p class="payment-info"><strong>This payment will be recorded and the device will be removed from pending list.</strong></p>
         </div>
         <div class="modal-footer">
             <button class="btn secondary" onclick="closeModal('paymentModal')">Cancel</button>
@@ -399,5 +463,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
     <script src="firebase-config.js"></script>
     <script type="module" src="script.js"></script>
+
+    <!--Additional JS for Split Payment methods-->
+    <script src="split-payment.js"></script>
 </body>
 </html>

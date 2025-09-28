@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
     startRealtimeUpdates();
 });
 let currentProcessingDevice = null;
+window.currentProcessingDevice = currentProcessingDevice;
 // Initialize application
 async function initializeSmartApp() {
     console.log('🚀 Initializing Smart Onboarding Panel...');
@@ -88,7 +89,10 @@ function setupEventListeners() {
     document.getElementById('refreshData').addEventListener('click', refreshAllData);
     // Add to setupEventListeners function
 document.getElementById('confirmHandover').addEventListener('click', confirmHandover);
-document.getElementById('confirmPayment').addEventListener('click', confirmPaymentCollection);
+document.getElementById('confirmPayment').addEventListener('click', function(e) {
+    e.preventDefault();
+    handlePaymentConfirmation();
+});
 document.getElementById('confirmReturn').addEventListener('click', confirmDeviceReturn);
 
     // Search functionality
@@ -730,45 +734,32 @@ async function confirmDeviceReturn() {
         showNotification('Failed to confirm device return', 'error');
     }
 }
+// Update your existing collectPayment function
 async function collectPayment(deviceId) {
+    console.log("collectPayment called with deviceId:", deviceId);
+    
     try {
         const device = findDeviceById(deviceId);
         if (!device) {
-            showNotification('Device not found', 'error');
+            showNotification("Device not found", "error");
             return;
         }
-        
+
+        console.log("Setting currentProcessingDevice:", device);
         currentProcessingDevice = device;
+        window.currentProcessingDevice = device;
+
+        // Rest of your existing code...
+        showModal("paymentModal");
         
-        // Populate modal with device details
-        document.getElementById('paymentDeviceDetails').innerHTML = `
-            <div class="device-summary" style="background: #f7fafc; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-                <strong>Ticket ID:</strong> ${device.ticketId}<br>
-                <strong>Customer:</strong> ${device.customerName || 'N/A'}<br>
-                <strong>Device:</strong> ${device.deviceBrand || 'N/A'} ${device.deviceModel || 'N/A'}<br>
-                <strong>Estimated Amount:</strong> ₹${device.estimatedCost || 0}
-            </div>
-        `;
-        
-        // Pre-fill the final amount with estimated cost
-        document.getElementById('finalAmount').value = device.estimatedCost || 0;
-        
-        // Reset payment method selection
-        document.getElementById('paymentMethod').value = '';
-        
-        showModal('paymentModal');
-        
-        // Focus on the amount input
-        setTimeout(() => {
-            document.getElementById('finalAmount').focus();
-            document.getElementById('finalAmount').select();
-        }, 300);
+        // Add this debug line
+        console.log("Payment modal shown, currentProcessingDevice:", currentProcessingDevice);
         
     } catch (error) {
-        console.error('Error initiating payment collection:', error);
-        showNotification('Failed to initiate payment collection', 'error');
+        console.error("Error in collectPayment:", error);
     }
 }
+
 async function processPaymentCollection(deviceId) {
     const paymentMethod = document.getElementById('paymentMethod').value;
     const finalAmount = parseFloat(document.getElementById('finalAmount').value);
@@ -1130,15 +1121,45 @@ function showModal(modalId) {
     document.body.style.overflow = 'hidden';
 }
 
+// function closeModal(modalId) {
+//     document.getElementById(modalId).classList.remove('show');
+//     document.body.style.overflow = 'auto';
+// }
+// Update your closeModal function or add this to the payment modal close handler
 function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('show');
     document.body.style.overflow = 'auto';
+    
+    // Reset current processing device when payment modal is closed
+    if (modalId === 'paymentModal') {
+        currentProcessingDevice = null;
+        resetPaymentModal();
+    }
 }
-
 function openRegistrationModal() {
     showModal('registrationModal');
 }
-
+function resetPaymentModal() {
+    // Reset single payment fields
+    document.getElementById('finalAmount').value = '';
+    document.getElementById('paymentMethod').value = '';
+    document.getElementById('paymentNotes').value = '';
+    
+    // Reset split payment fields
+    document.getElementById('splitTotalAmount').value = '';
+    document.getElementById('splitPaymentsList').innerHTML = '';
+    
+    // Reset payment mode selection
+    document.querySelector('input[name="paymentMode"][value="single"]').checked = true;
+    document.getElementById('singlePaymentSection').style.display = 'block';
+    document.getElementById('splitPaymentSection').style.display = 'none';
+    
+    // Reset split payment counter
+    splitPaymentCounter = 0;
+    
+    // Clear current processing device
+    currentProcessingDevice = null;
+}
 // function showSuccessModal(deviceData) {
 //     const modalBody = document.getElementById('successModalBody');
     
@@ -1369,10 +1390,6 @@ function generateReceiptPreview(device) {
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                     <span style="font-weight: bold;">Mobile:</span>
                     <span>${device.customerMobile}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="font-weight: bold;">Email:</span>
-                    <span>${device.customerEmail || 'N/A'}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                     <span style="font-weight: bold;">Device:</span>
@@ -1834,8 +1851,345 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeSmartApp();
     setupEventListeners();
     setupBarcodeScanning(); // Add this line
+     setupPaymentModal(); // Add this line
     startRealtimeUpdates();
 });
+
+// Enhanced Payment Collection JavaScript
+let splitPaymentCounter = 0;
+
+// Initialize payment modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+    setupPaymentModal();
+});
+
+function setupPaymentModal() {
+    // Payment mode selection
+    const paymentModeInputs = document.querySelectorAll('input[name="paymentMode"]');
+    paymentModeInputs.forEach(input => {
+        input.addEventListener('change', handlePaymentModeChange);
+    });
+
+    // Add split payment button
+    document.getElementById('addSplitPayment').addEventListener('click', addSplitPaymentRow);
+
+    // Split total amount change
+    document.getElementById('splitTotalAmount').addEventListener('input', updateSplitSummary);
+
+    // Enhanced confirm payment button
+    document.getElementById('confirmPayment').addEventListener('click', function(e) {
+        e.preventDefault();
+        handlePaymentConfirmation();
+    });
+}
+
+function handlePaymentModeChange(e) {
+    const singleSection = document.getElementById('singlePaymentSection');
+    const splitSection = document.getElementById('splitPaymentSection');
+    
+    if (e.target.value === 'single') {
+        singleSection.style.display = 'block';
+        splitSection.style.display = 'none';
+        clearSplitPayments();
+    } else {
+        singleSection.style.display = 'none';
+        splitSection.style.display = 'block';
+        initializeSplitPayments();
+    }
+}
+
+function initializeSplitPayments() {
+    // Clear existing split payments
+    clearSplitPayments();
+    // Add first split payment row
+    addSplitPaymentRow();
+}
+
+function addSplitPaymentRow() {
+    splitPaymentCounter++;
+    const container = document.getElementById('splitPaymentsList');
+    
+    const splitItem = document.createElement('div');
+    splitItem.className = 'split-payment-item';
+    splitItem.dataset.id = splitPaymentCounter;
+    
+    splitItem.innerHTML = `
+        <div class="form-group">
+            <label>Method:</label>
+            <select class="split-method" required>
+                <option value="">Select</option>
+                <option value="cash">Cash</option>
+                <option value="upi">UPI/Online</option>
+                <option value="card">Card/POS</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Amount (₹):</label>
+            <input type="number" class="split-amount" placeholder="0.00" min="0" step="0.01" required>
+        </div>
+        <button type="button" class="remove-split" onclick="removeSplitPaymentRow(${splitPaymentCounter})">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    container.appendChild(splitItem);
+    
+    // Add event listeners for real-time updates
+    const amountInput = splitItem.querySelector('.split-amount');
+    amountInput.addEventListener('input', updateSplitSummary);
+    
+    updateSplitSummary();
+}
+
+function removeSplitPaymentRow(id) {
+    const item = document.querySelector(`[data-id="${id}"]`);
+    if (item) {
+        item.remove();
+        updateSplitSummary();
+    }
+    
+    // Ensure at least one payment row exists
+    const remainingItems = document.querySelectorAll('.split-payment-item');
+    if (remainingItems.length === 0) {
+        addSplitPaymentRow();
+    }
+}
+
+function updateSplitSummary() {
+    const totalAmount = parseFloat(document.getElementById('splitTotalAmount').value) || 0;
+    const splitAmounts = document.querySelectorAll('.split-amount');
+    
+    let collectedAmount = 0;
+    splitAmounts.forEach(input => {
+        collectedAmount += parseFloat(input.value) || 0;
+    });
+    
+    const remaining = totalAmount - collectedAmount;
+    
+    // Update summary display
+    document.getElementById('summaryTotal').textContent = `₹${totalAmount.toLocaleString('en-IN')}`;
+    document.getElementById('summaryCollected').textContent = `₹${collectedAmount.toLocaleString('en-IN')}`;
+    document.getElementById('summaryRemaining').textContent = `₹${remaining.toLocaleString('en-IN')}`;
+    
+    // Update balance row styling
+    const balanceRow = document.querySelector('.balance-row');
+    balanceRow.classList.remove('balanced', 'unbalanced');
+    
+    if (remaining === 0 && totalAmount > 0) {
+        balanceRow.classList.add('balanced');
+    } else if (remaining !== 0) {
+        balanceRow.classList.add('unbalanced');
+    }
+    
+    // Enable/disable confirm button
+    const confirmBtn = document.getElementById('confirmPayment');
+    confirmBtn.disabled = remaining !== 0 || totalAmount <= 0;
+}
+
+function clearSplitPayments() {
+    document.getElementById('splitPaymentsList').innerHTML = '';
+    document.getElementById('splitTotalAmount').value = '';
+    splitPaymentCounter = 0;
+    updateSplitSummary();
+}
+
+async function handlePaymentConfirmation() {
+    console.log("Payment confirmation triggered");
+    
+    if (!currentProcessingDevice) {
+        showNotification("No device selected for payment", "error");
+        return;
+    }
+
+    const paymentMode = document.querySelector('input[name="paymentMode"]:checked')?.value;
+    
+    if (!paymentMode) {
+        showNotification("Please select a payment mode", "error");
+        return;
+    }
+
+    try {
+        if (paymentMode === "single") {
+            await processSinglePayment();
+        } else {
+            await processSplitPayment();
+        }
+    } catch (error) {
+        console.error("Payment confirmation error:", error);
+        showNotification("Failed to process payment", "error");
+    }
+}
+
+
+async function processSinglePayment() {
+    const finalAmount = document.getElementById("finalAmount").value;
+    const paymentMethod = document.getElementById("paymentMethod").value;
+    const paymentNotes = document.getElementById("paymentNotes").value;
+
+    // Validation
+    if (!finalAmount || parseFloat(finalAmount) <= 0) {
+        showNotification("Please enter a valid payment amount", "error");
+        document.getElementById("finalAmount").focus();
+        return;
+    }
+
+    if (!paymentMethod) {
+        showNotification("Please select a payment method", "error");
+        document.getElementById("paymentMethod").focus();
+        return;
+    }
+
+    try {
+        const deviceRef = doc(db, "repairtickets", currentProcessingDevice.id);
+        const paymentData = {
+            status: "Payment Collected",
+            paymentStatus: "collected",
+            finalAmount: parseFloat(finalAmount),
+            finalPaymentAmount: parseFloat(finalAmount),
+            paymentMethod: paymentMethod,
+            paymentNotes: paymentNotes,
+            paymentType: "single",
+            paymentCollectedDate: Timestamp.now(),
+            updatedAt: Timestamp.now()
+        };
+
+        await updateDoc(deviceRef, paymentData);
+
+        // Create payment log entry
+        await addDoc(collection(db, "paymentlogs"), {
+            ticketId: currentProcessingDevice.ticketId,
+            customerName: currentProcessingDevice.customerName,
+            deviceInfo: `${currentProcessingDevice.deviceBrand} ${currentProcessingDevice.deviceModel}`,
+            amount: parseFloat(finalAmount),
+            method: paymentMethod,
+            type: "singlepayment",
+            timestamp: Timestamp.now(),
+            deviceId: currentProcessingDevice.id,
+            notes: paymentNotes
+        });
+
+        closeModal("paymentModal");
+        showNotification(`Payment of ₹${finalAmount} collected via ${getPaymentMethodName(paymentMethod)}!`, "success");
+        
+        resetPaymentModal();
+        await loadTodayRevenue();
+        await loadAllDevices();
+        
+    } catch (error) {
+        console.error("Error processing single payment:", error);
+        showNotification("Failed to process payment", "error");
+    }
+}
+
+async function processSplitPayment() {
+    const totalAmount = parseFloat(document.getElementById('splitTotalAmount').value);
+    const paymentNotes = document.getElementById('paymentNotes').value;
+    const splitItems = document.querySelectorAll('.split-payment-item');
+    
+    // Validate split payments
+    if (!totalAmount || totalAmount <= 0) {
+        showNotification('Please enter a valid total amount', 'error');
+        return;
+    }
+    
+    const splitPayments = [];
+    let totalCollected = 0;
+    
+    for (let item of splitItems) {
+        const method = item.querySelector('.split-method').value;
+        const amount = parseFloat(item.querySelector('.split-amount').value) || 0;
+        
+        if (!method) {
+            showNotification('Please select payment method for all splits', 'error');
+            return;
+        }
+        
+        if (amount <= 0) {
+            showNotification('Please enter valid amounts for all payment methods', 'error');
+            return;
+        }
+        
+        splitPayments.push({ method, amount });
+        totalCollected += amount;
+    }
+    
+    if (Math.abs(totalCollected - totalAmount) > 0.01) {
+        showNotification('Split payments must equal the total amount', 'error');
+        return;
+    }
+    
+    try {
+        // Update device record
+        const deviceRef = doc(db, 'repair_tickets', currentProcessingDevice.id);
+        const paymentData = {
+            status: 'Payment Collected',
+            paymentStatus: 'collected',
+            finalAmount: totalAmount,
+            finalPaymentAmount: totalAmount,
+            paymentMethod: 'split',
+            paymentNotes: paymentNotes,
+            paymentType: 'split',
+            splitPayments: splitPayments,
+            paymentCollectedDate: Timestamp.now(),
+            updatedAt: Timestamp.now()
+        };
+        
+        await updateDoc(deviceRef, paymentData);
+        
+        // Create individual payment log entries for each split
+        for (let split of splitPayments) {
+            await addDoc(collection(db, 'payment_logs'), {
+                ticketId: currentProcessingDevice.ticketId,
+                customerName: currentProcessingDevice.customerName,
+                deviceInfo: `${currentProcessingDevice.deviceBrand} ${currentProcessingDevice.deviceModel}`,
+                amount: split.amount,
+                method: split.method,
+                type: 'split_payment',
+                totalAmount: totalAmount,
+                splitCount: splitPayments.length,
+                timestamp: Timestamp.now(),
+                deviceId: currentProcessingDevice.id,
+                notes: paymentNotes
+            });
+        }
+        
+        closeModal('paymentModal');
+        
+        // Create success message
+        const methodSummary = splitPayments.map(s => 
+            `₹${s.amount} via ${getPaymentMethodName(s.method)}`
+        ).join(', ');
+        
+        showNotification(`Split payment collected: ${methodSummary}`, 'success');
+        
+        resetPaymentModal();
+        await loadTodayRevenue();
+        await loadAllDevices();
+        
+    } catch (error) {
+        console.error('Error processing split payment:', error);
+        showNotification('Failed to process split payment', 'error');
+    }
+}
+
+function getPaymentMethodName(method) {
+    const methodNames = {
+        'cash': 'Cash',
+        'upi': 'UPI/Online',
+        'card': 'Card/POS'
+    };
+    return methodNames[method] || method;
+}
+
+
+
+// Make functions globally available
+window.removeSplitPaymentRow = removeSplitPaymentRow;
+window.resetPaymentModal = resetPaymentModal;
+window.handlePaymentConfirmation = handlePaymentConfirmation;
+// Make functions globally available
+window.processSinglePayment = processSinglePayment;
+window.processSplitPayment = processSplitPayment;
 
 // Make functions globally available
 window.showPrintReceiptModal = showPrintReceiptModal;
