@@ -2019,3 +2019,21 @@ body {
         align-self: flex-end;
     }
 }
+.payment-mode-option.disabled-option {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.payment-mode-option input[disabled] + .radio-custom {
+    background: #eee;
+    border-color: #bbb;
+}
+
+.payment-mode-option input[disabled] ~ .mode-info strong,
+.payment-mode-option input[disabled] ~ .mode-info p {
+    color: #aaa;
+}
+/* Hide the single payment radio button and its label */
+.payment-mode-option.disabled-option {
+    display: none !important;
+}
