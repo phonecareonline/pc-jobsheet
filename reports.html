@@ -15,7 +15,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #fdfeff 0%, #d57ae7 100%);
             min-height: 100vh;
             color: #2d3748;
         }
@@ -1170,7 +1170,7 @@
                 let detailsDisplay = '';
                 
                 if (method === 'split' && transaction.splitPayments) {
-                    methodDisplay = '<span class="method-tag split">Split Payment</span>';
+                    methodDisplay = '<span class="method-tag split">Counter Payment</span>';
                     detailsDisplay = `
                         <div class="split-payment-breakdown">
                             ${transaction.splitPayments.map(split => `
@@ -1321,7 +1321,7 @@
                         transaction.customerName,
                         transaction.customerMobile,
                         `${transaction.deviceBrand} ${transaction.deviceModel}`,
-                        'Split Payment',
+                        'Counter Payment',
                         amount,
                         transaction.paymentNotes || ''
                     ]);

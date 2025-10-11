@@ -452,12 +452,17 @@ function createPaymentCard(device) {
                 </div>
             </div>
             
-            <div class="device-actions">
-                <button class="device-btn payment" onclick="collectPayment('${device.id}')">
-                    <i class="fas fa-rupee-sign"></i>
-                    Collect Payment
-                </button>
-            </div>
+           
+<div class="device-actions">
+    <button class="device-btn whatsapp" onclick="openWhatsAppModal('${device.id}', 'payment')">
+        <i class="fab fa-whatsapp"></i>
+        Notify Customer
+    </button>
+    <button class="device-btn payment" onclick="collectPayment('${device.id}')">
+        <i class="fas fa-rupee-sign"></i>
+        Collect Payment
+    </button>
+</div>
         </div>
     `;
 }
@@ -530,12 +535,17 @@ function createReturnCard(device) {
                 </div>
             </div>
             
-            <div class="device-actions">
-                <button class="device-btn return" onclick="processReturn('${device.id}')">
-                    <i class="fas fa-hand-holding"></i>
-                    Hand Over to Customer
-                </button>
-            </div>
+           
+<div class="device-actions">
+    <button class="device-btn whatsapp" onclick="openWhatsAppModal('${device.id}', 'return')">
+        <i class="fab fa-whatsapp"></i>
+        Notify Customer
+    </button>
+    <button class="device-btn return" onclick="processReturn('${device.id}')">
+        <i class="fas fa-hand-holding"></i>
+        Hand Over to Customer
+    </button>
+</div>
         </div>
     `;
 }
@@ -560,6 +570,292 @@ function switchTab(tabName) {
     
     appState.currentTab = tabName;
 }
+
+
+
+// whatsapp sending code --------------------------
+
+// Open WhatsApp modal with pre-filled message
+
+// Global variables for WhatsApp
+let currentWhatsAppDevice = null;
+let currentWhatsAppType = null;
+let selectedLanguage = 'english';
+
+// WhatsApp message templates
+const whatsappTemplates = {
+    payment: {
+        english: (device) => `Hello ${device.customerName}! 👋
+
+Good news! Your *${device.deviceBrand} ${device.deviceModel}* has been successfully repaired and is ready for pickup! ✅
+
+📋 *Ticket ID:* ${device.ticketId}
+💰 *Amount to Pay:* ₹${device.estimatedCost}
+📍 *Location:* PhoneCare, Shop No 27, Mahanadi Complex, Niharika, Korba
+
+Please visit us at your convenience to collect your device and complete the payment.
+
+🕒 *Working Hours:* 10 AM - 10 PM (All Days)
+
+For any queries, call: +91 93407 57231
+
+Thank you for choosing PhoneCare! 😊`,
+
+        hindi: (device) => `नमस्ते ${device.customerName}! 👋
+
+खुशखबरी! आपका *${device.deviceBrand} ${device.deviceModel}* सफलतापूर्वक रिपेयर हो गया है और लेने के लिए तैयार है! ✅
+
+📋 *टिकट आईडी:* ${device.ticketId}
+💰 *भुगतान राशि:* ₹${device.estimatedCost}
+📍 *पता:* फोनकेयर, शॉप नं 27, महानदी कॉम्प्लेक्स, निहारिका, कोरबा
+
+कृपया अपनी सुविधानुसार हमारे पास आएं और अपना डिवाइस लेकर भुगतान पूरा करें।
+
+🕒 *समय:* सुबह 10 बजे - रात 10 बजे (सभी दिन)
+
+किसी भी प्रश्न के लिए कॉल करें: +91 93407 57231
+
+फोनकेयर चुनने के लिए धन्यवाद! 😊`
+    },
+
+    return: {
+        english: (device) => `Hello ${device.customerName}! 👋
+
+Regarding your *${device.deviceBrand} ${device.deviceModel}*
+
+📋 *Ticket ID:* ${device.ticketId}
+
+After thorough inspection, we regret to inform you that your device cannot be repaired due to:
+${device.returnReason || 'technical limitations'}
+
+Your device is ready for return. Please collect it at your earliest convenience.
+
+📍 *Location:* PhoneCare, Shop No 27, Mahanadi Complex, Niharika, Korba
+🕒 *Working Hours:* 10 AM - 10 PM (All Days)
+
+*No charges* will be applied. 
+
+For any queries, call: +91 93407 57231
+
+We apologize for the inconvenience.`,
+
+        hindi: (device) => `नमस्ते ${device.customerName}! 👋
+
+आपके *${device.deviceBrand} ${device.deviceModel}* के बारे में
+
+📋 *टिकट आईडी:* ${device.ticketId}
+
+पूरी जांच के बाद, हमें यह बताते हुए खेद है कि आपका डिवाइस रिपेयर नहीं हो सकता:
+${device.returnReason || 'तकनीकी सीमाओं के कारण'}
+
+आपका डिवाइस वापसी के लिए तैयार है। कृपया जल्द से जल्द इसे ले जाएं।
+
+📍 *पता:* फोनकेयर, शॉप नं 27, महानदी कॉम्प्लेक्स, निहारिका, कोरबा
+🕒 *समय:* सुबह 10 बजे - रात 10 बजे (सभी दिन)
+
+*कोई शुल्क नहीं* लगेगा।
+
+किसी भी प्रश्न के लिए कॉल करें: +91 93407 57231
+
+असुविधा के लिए खेद है।`
+    }
+};
+
+// Open WhatsApp modal
+function openWhatsAppModal(deviceId, type) {
+    const device = findDeviceById(deviceId);
+    if (!device) {
+        showNotification('Device not found', 'error');
+        return;
+    }
+
+    currentWhatsAppDevice = device;
+    currentWhatsAppType = type;
+    selectedLanguage = 'english';
+
+    // Reset language buttons
+    document.querySelectorAll('.language-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector('.language-btn[data-lang="english"]').classList.add('active');
+
+    // Display device info
+    document.getElementById('whatsappDeviceInfo').innerHTML = `
+        <div class="device-summary">
+            <strong>Customer:</strong> ${device.customerName}<br>
+            <strong>Mobile:</strong> ${device.customerMobile}<br>
+            <strong>Device:</strong> ${device.deviceBrand} ${device.deviceModel}<br>
+            <strong>Ticket ID:</strong> ${device.ticketId}
+        </div>
+    `;
+
+    // Show preview
+    updateMessagePreview();
+
+    showModal('whatsappModal');
+}
+
+// Select language
+function selectLanguage(lang) {
+    selectedLanguage = lang;
+    
+    // Update button states
+    document.querySelectorAll('.language-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`.language-btn[data-lang="${lang}"]`).classList.add('active');
+    
+    // Update preview
+    updateMessagePreview();
+}
+
+// Update message preview
+function updateMessagePreview() {
+    if (!currentWhatsAppDevice || !currentWhatsAppType) return;
+    
+    const message = whatsappTemplates[currentWhatsAppType][selectedLanguage](currentWhatsAppDevice);
+    document.getElementById('messagePreview').textContent = message;
+}
+
+// Send WhatsApp message using free WhatsApp Web API
+// THIS IS THE MOST RELIABLE METHOD
+function sendWhatsAppMessage() {
+    if (!currentWhatsAppDevice) {
+        showNotification('No device selected', 'error');
+        return;
+    }
+
+    // Get phone number (remove any spaces, hyphens, etc.)
+    let phoneNumber = currentWhatsAppDevice.customerMobile.replace(/\D/g, '');
+    
+    // Add country code if not present (assuming India +91)
+    if (!phoneNumber.startsWith('91') && phoneNumber.length === 10) {
+        phoneNumber = '91' + phoneNumber;
+    }
+
+    // Get message text
+    const message = whatsappTemplates[currentWhatsAppType][selectedLanguage](currentWhatsAppDevice);
+    
+    // Encode message for URL - Use proper encoding
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Try different WhatsApp URL formats for better compatibility
+    // Format 1: api.whatsapp.com (better for desktop)
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+    
+    // Alternative Format 2: wa.me (better for mobile)
+    // const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    
+    // Open WhatsApp in new window with proper attributes
+    const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    
+    if (newWindow) {
+        // Log the notification
+        logWhatsAppNotification(currentWhatsAppDevice.id, currentWhatsAppType, selectedLanguage);
+        
+        // Close modal
+        closeModal('whatsappModal');
+        
+        showNotification(`WhatsApp opened! Message ready to send to ${currentWhatsAppDevice.customerName}`, 'success');
+    } else {
+        // If popup blocked, provide fallback
+        showNotification('Please allow popups and try again', 'warning');
+        
+        // Copy message to clipboard as fallback
+        copyMessageToClipboard(message, phoneNumber);
+    }
+}
+function copyMessageToClipboard(message, phoneNumber) {
+    // Create a temporary textarea
+    const textarea = document.createElement('textarea');
+    textarea.value = message;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        
+        // Show manual instructions
+        showNotification(`Message copied! Open WhatsApp manually for +${phoneNumber}`, 'info');
+        
+        // Open WhatsApp without message as last resort
+        setTimeout(() => {
+            window.open(`https://wa.me/${phoneNumber}`, '_blank');
+        }, 1000);
+    } catch (err) {
+        console.error('Failed to copy message:', err);
+        document.body.removeChild(textarea);
+    }
+}
+
+// Copy message only (without opening WhatsApp)
+function copyMessageOnly() {
+    if (!currentWhatsAppDevice || !currentWhatsAppType) return;
+    
+    const message = whatsappTemplates[currentWhatsAppType][selectedLanguage](currentWhatsAppDevice);
+    
+    // Modern clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(message).then(() => {
+            showNotification('Message copied to clipboard! 📋', 'success');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+            fallbackCopy(message);
+        });
+    } else {
+        fallbackCopy(message);
+    }
+}
+
+// Fallback copy method
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        showNotification('Message copied to clipboard! 📋', 'success');
+    } catch (err) {
+        showNotification('Failed to copy message', 'error');
+    }
+    
+    document.body.removeChild(textarea);
+}
+
+// Make function globally available
+window.copyMessageOnly = copyMessageOnly;
+// Log WhatsApp notifications to Firebase (optional)
+async function logWhatsAppNotification(deviceId, type, language) {
+    try {
+        await addDoc(collection(db, 'whatsapp_logs'), {
+            deviceId: deviceId,
+            ticketId: currentWhatsAppDevice.ticketId,
+            customerName: currentWhatsAppDevice.customerName,
+            customerMobile: currentWhatsAppDevice.customerMobile,
+            messageType: type,
+            language: language,
+            timestamp: Timestamp.now(),
+            sentBy: 'Front Desk'
+        });
+        console.log('WhatsApp notification logged');
+    } catch (error) {
+        console.error('Error logging WhatsApp notification:', error);
+    }
+}
+
+// Make functions globally available
+window.openWhatsAppModal = openWhatsAppModal;
+window.selectLanguage = selectLanguage;
+window.sendWhatsAppMessage = sendWhatsAppMessage;
+
+
 
 // Device actions
 async function confirmHandover() {

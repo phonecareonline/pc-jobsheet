@@ -458,7 +458,42 @@
             </div>
         </div>
     </div>
-
+    <!-- WhatsApp Message Modal -->
+<div id="whatsappModal" class="modal">
+    <div class="modal-content whatsapp-modal">
+        <div class="modal-header">
+            <h3><i class="fab fa-whatsapp"></i> Send WhatsApp Message</h3>
+            <button class="close-modal" onclick="closeModal('whatsappModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="whatsappDeviceInfo"></div>
+            
+            <div class="language-selector">
+                <button class="language-btn active" data-lang="english" onclick="selectLanguage('english')">
+                    <i class="fas fa-globe"></i> English
+                </button>
+                <button class="language-btn" data-lang="hindi" onclick="selectLanguage('hindi')">
+                    <i class="fas fa-language"></i> हिंदी (Hindi)
+                </button>
+            </div>
+            
+            <div class="message-preview" id="messagePreview"></div>
+            
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--gray-600);">
+                <i class="fas fa-info-circle"></i> This will open WhatsApp Web/App with the message ready to send.
+            </p>
+        </div>
+        <div class="modal-footer">
+    <button class="btn secondary" onclick="copyMessageOnly()">
+        <i class="fas fa-copy"></i> Copy Message
+    </button>
+    <button class="btn secondary" onclick="closeModal('whatsappModal')">Cancel</button>
+    <button class="btn primary" id="sendWhatsappBtn" onclick="sendWhatsAppMessage()">
+        <i class="fab fa-whatsapp"></i> Open WhatsApp
+    </button>
+</div>
+    </div>
+</div>
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
     <script src="firebase-config.js"></script>
