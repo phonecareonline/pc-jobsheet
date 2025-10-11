@@ -499,29 +499,232 @@
 </div>
     </div>
 </div>
-<div class="whatsapp-intro-modal" id="whatsappIntroModal">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closeIntroModal()" aria-label="Close">&times;</button>
-    <div class="modal-image-area">
-      <img src="https://png.pngtree.com/png-vector/20230510/ourmid/pngtree-new-feature---banner-speech-bubble-label-sticker-ribbon-vector-png-image_7092161.png" /> 
-    </div>
-    <div class="modal-header">
-      <h3>Introducing New WhatsApp notification feature</h3>
-    </div>
-    <div class="modal-body">
-      <ul>
-        <li>Easily notify customers about repair status via WhatsApp.</li>
-        <li>Payment Collections tab > Notify Customer > Copy Message > Open WhatsApp</li>
-        <li>Send Hindi/English messages seamlessly.</li>
+<!-- JUST ADD THIS TO YOUR HTML BEFORE </body> TAG -->
+
+<!-- WhatsApp Feature Modal (Google Gemini Style) -->
+<div class="gemini-intro-modal" id="whatsappFeatureModal">
+    <div class="gemini-modal-content">
+        <button class="gemini-close" onclick="closeFeatureModal()">✕</button>
         
-      </ul>
-      
+        <div class="gemini-sparkle"><i class="fa-brands fa-whatsapp" style="color: #4ade80;"></i></div>
+        
+        <h2 class="gemini-title">New: WhatsApp Notifications</h2>
+        <p class="gemini-subtitle">Notify customers instantly about their repair status</p>
+        
+        <div class="gemini-features">
+            <div class="gemini-feature">
+                <span class="gemini-dot"></span>
+                <span>Go to Payment Collection tab</span>
+            </div>
+            <div class="gemini-feature">
+                <span class="gemini-dot"></span>
+                <span>Click "Notify Customer" button</span>
+            </div>
+            <div class="gemini-feature">
+                <span class="gemini-dot"></span>
+                <span>Copy English or Hindi message</span>
+            </div>
+            <div class="gemini-feature">
+                <span class="gemini-dot"></span>
+                <span>Open WhatsApp and Send!</span>
+            </div>
+        </div>
+        
+        <button class="gemini-btn" onclick="closeFeatureModal()">Got it</button>
     </div>
-    <div class="modal-footer">
-      <button class="btn primary" onclick="closeIntroModal()">OK, Got it!</button>
-    </div>
-  </div>
 </div>
+
+<style>
+/* Google Gemini Style Modal */
+.gemini-intro-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, 
+        rgba(66, 133, 244, 0.03) 0%,
+        rgba(52, 168, 83, 0.03) 50%,
+        rgba(251, 188, 5, 0.03) 100%);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.gemini-intro-modal.show {
+    display: flex;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.gemini-modal-content {
+    background: white;
+    border-radius: 28px;
+    padding: 48px 40px 40px;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
+                0 2px 8px rgba(0, 0, 0, 0.04);
+    position: relative;
+    animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.gemini-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #5f6368;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.gemini-close:hover {
+    background: #f1f3f4;
+    color: #202124;
+}
+
+.gemini-sparkle {
+    font-size: 32px;
+    text-align: center;
+    margin-bottom: 20px;
+    animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.1) rotate(10deg); }
+}
+
+.gemini-title {
+    font-size: 24px;
+    font-weight: 500;
+    color: #202124;
+    text-align: center;
+    margin: 0 0 8px;
+    font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.gemini-subtitle {
+    font-size: 14px;
+    color: #5f6368;
+    text-align: center;
+    margin: 0 0 32px;
+    line-height: 1.5;
+}
+
+.gemini-features {
+    margin-bottom: 32px;
+}
+
+.gemini-feature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    font-size: 14px;
+    color: #202124;
+    line-height: 1.5;
+}
+
+.gemini-dot {
+    width: 6px;
+    height: 6px;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.gemini-btn {
+    width: 100%;
+    padding: 12px 24px;
+    background: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.gemini-btn:hover {
+    background: #1765cc;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12),
+                0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.gemini-btn:active {
+    transform: scale(0.98);
+}
+
+@media (max-width: 640px) {
+    .gemini-modal-content {
+        padding: 40px 24px 32px;
+        border-radius: 24px;
+    }
+    
+    .gemini-title {
+        font-size: 20px;
+    }
+}
+</style>
+
+<script>
+// Auto-show modal from October 12 to 13, 2025
+window.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 9 = October (0-indexed)
+    const date = now.getDate();
+    
+    // Show only on Oct 12 and Oct 13, 2025
+    const shouldShow = year === 2025 && month === 9 && (date === 12 || date === 13);
+    
+    if (shouldShow) {
+        setTimeout(() => {
+            document.getElementById('whatsappFeatureModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }, 800);
+    }
+});
+
+function closeFeatureModal() {
+    document.getElementById('whatsappFeatureModal').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+// Close on overlay click
+document.getElementById('whatsappFeatureModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeFeatureModal();
+});
+</script>
 
 
 

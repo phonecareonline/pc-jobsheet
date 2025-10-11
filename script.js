@@ -734,8 +734,15 @@ function closeIntroModal() {
         document.body.style.overflow = '';
     }
 }
+window.closeIntroModal = closeIntroModal; // Make it accessible from HTML
+
 document.addEventListener('DOMContentLoaded', showWhatsAppIntroModal);
-window.closeIntroModal = closeIntroModal;
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.modal-close, .whatsapp-intro-modal .btn.primary').forEach(btn => {
+        btn.addEventListener('click', closeIntroModal);
+    });
+});
+
 
 // Send WhatsApp message using free WhatsApp Web API
 // THIS IS THE MOST RELIABLE METHOD
