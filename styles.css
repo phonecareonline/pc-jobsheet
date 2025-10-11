@@ -84,10 +84,17 @@ body {
     letter-spacing: -0.02em;
 }
 
-.brand-info p {
+.brand-info  .cashier-name{
     color: var(--gray-500);
     font-size: 0.875rem;
     margin: 0;
+}
+
+.brand-info  .p-status {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin: 0;
+
 }
 
 .header-stats {
@@ -2041,4 +2048,123 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     white-space: pre-wrap;
     margin-top: 1rem;
+}
+
+.whatsapp-intro-modal {
+    position: fixed;
+    z-index: 3000;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(43, 86, 110, 0.12);
+    backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.18s;
+}
+
+.whatsapp-intro-modal.show {
+    display: flex;
+}
+
+.whatsapp-intro-modal .modal-content {
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 4.5px 28px 0 rgba(17, 39, 89, 0.17);
+    border-radius: 18px;
+    padding: 2rem 2.2rem;
+    width: 100%;
+    max-width: 840px;
+    margin: 2vw;
+    text-align: center;
+    border: 1.7px solid rgba(67,233,123,0.13);
+    position: relative;
+    overflow-x: auto; /* avoid horizontal overflow on content */
+    box-sizing: border-box;
+}
+
+.whatsapp-intro-modal .modal-image-area {
+    margin: -1.2rem auto 1rem auto;
+    width: 120px; min-height: 70px;
+}
+
+.whatsapp-intro-modal .modal-image-area img,
+.whatsapp-intro-modal .modal-image-area svg {
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+    
+}
+
+.whatsapp-intro-modal .modal-header h3 {
+    color: #108c4e;
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin-bottom: 0.9rem;
+    letter-spacing: 0.02em;
+    background: linear-gradient(90deg,#19e381,#25d366 56%,#36aeb6 92%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.whatsapp-intro-modal .modal-body {
+    color: #222;
+    font-size: 1.16rem;
+    font-weight: 500;
+    margin-bottom: 0.7rem;
+    text-align: left;
+    line-height: 1.7;
+    padding-left: 0.9em;
+}
+
+.whatsapp-intro-modal ul {
+    margin: 0 0 0.7em 1.2em;
+    padding: 0;
+    list-style: disc outside;
+}
+
+.whatsapp-intro-modal .modal-footer {
+    margin-top: 1.3rem;
+    display: flex;
+    justify-content: center;
+}
+
+.whatsapp-intro-modal .btn.primary {
+    background: linear-gradient(90deg,#43e97b 0%,#38f9d7 100%);
+    color: #fff;
+    border: none;
+    padding: 0.80rem 2.3rem;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1.08rem;
+    letter-spacing: 0.01em;
+    box-shadow: 0 2.5px 8px 0 rgba(43,201,134,0.10);
+    transition: opacity 0.17s;
+}
+.whatsapp-intro-modal .btn.primary:hover {
+    opacity: 0.89;
+}
+
+.whatsapp-intro-modal .modal-close {
+    position: absolute;
+    right: 15px; top: 15px;
+    font-size: 1.45rem;
+    color: #bbb;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.16s;
+}
+.whatsapp-intro-modal .modal-close:hover { color: #d32525; }
+
+@media (max-width: 900px) {
+    .whatsapp-intro-modal .modal-content {
+        max-width: 99vw;
+        padding: 1.2rem 0.2rem;
+        margin: 0.5vw;
+    }
+    .whatsapp-intro-modal .modal-image-area img { width: 70px; height: 70px;}
 }

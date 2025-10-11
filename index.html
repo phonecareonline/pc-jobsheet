@@ -15,8 +15,13 @@
             <div class="logo-section">
                 <!-- <i class="fas fa-desktop"></i> -->
                 <div class="brand-info">
-                    <h1>PhoneCare Device Onboarding</h1>
-                    <p>Accept Devices for Repair and Handover</p>
+                    <h1>PhoneCare Repairing System</h1>
+                    
+                    <p class="cashier-name">Cashier : Vicky</p>
+                    <p class="p-status">Status :  <span class="status-indicator" style=" display: inline-block;
+    background: linear-gradient(to right, #4ade80, #22c55e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;color: black;"></span> Active</p>
                 </div>
             </div>
             <div class="header-stats">
@@ -61,19 +66,19 @@
             <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
             <div class="actions-grid">
                 <button class="action-card" id="newRegistrationBtn">
-                    <i class="fas fa-plus-circle"></i>
+                    <img src="https://cdn-icons-png.flaticon.com/256/17072/17072060.png" alt="" style="height: 45px;width: 45px;">
                     <span>New Device Registration</span>
                 </button>
                 <button class="action-card" id="searchDeviceBtn">
-                    <i class="fas fa-search"></i>
+                    <img src="https://cdn-icons-png.flaticon.com/512/10629/10629681.png" style="height: 45px;width: 45px;" alt="">
                     <span>Search Device</span>
                 </button>
                 <button class="action-card" id="deviceRegistryBtn" onclick="window.location.href='registry.html'">
-                    <i class="fas fa-clipboard-list"></i>
+                    <img src="https://cdn-icons-png.flaticon.com/512/6475/6475355.png" style="height: 45px;width: 45px;" alt="">
                     <span>Device Registry</span>
                 </button>
                 <button class="action-card" id="viewReportsBtn" onclick="window.location.href='reports.html'">
-    <i class="fas fa-chart-bar"></i>
+    <img src="https://cdn-icons-png.flaticon.com/512/4876/4876510.png" style="height: 45px;width: 45px;" alt="">
     <span>View Reports</span>
 </button>
 
@@ -111,17 +116,17 @@
         <section class="main-content-section">
             <div class="tab-navigation">
                 <button class="tab-btn active" data-tab="handover">
-                    <i class="fas fa-handshake" style="color: red;"></i>
+                    <i class="fa-solid fa-ban" style="color: #ff4d4d;"></i>
                     <span> <b style="color: red;">Smart Handover Disabled</b> </span>
                     <span class="badge" id="handoverBadge">0</span>
                 </button>
                 <button class="tab-btn" data-tab="payment">
-                    <i class="fas fa-credit-card"></i>
+                    <img src="icon.png" alt="" style="height: 60px; width: 60px;">
                     <span>Payment Collection</span>
                     <span class="badge" id="paymentBadge">0</span>
                 </button>
                 <button class="tab-btn" data-tab="returns">
-                    <i class="fas fa-undo"></i>
+                    <img src="https://cdn-icons-png.flaticon.com/512/11449/11449946.png" alt="" style="height: 60px; width: 60px;">
                     <span>Device Returns</span>
                     <span class="badge" id="returnsBadge">0</span>
                 </button>
@@ -143,7 +148,7 @@
 
             <div class="tab-content" id="paymentContent">
                 <div class="tab-header">
-                    <h3><i class="fas fa-cash-register"></i> Payment Collection</h3>
+                    <h3><img src="icon.png" style="height: 60px; width: 60px;" alt=""> Payment Collection</h3>
                     <p>Completed devices awaiting payment from customers</p>
                 </div>
                 <div class="devices-grid" id="paymentDevices">
@@ -156,7 +161,7 @@
 
             <div class="tab-content" id="returnsContent">
                 <div class="tab-header">
-                    <h3><i class="fas fa-exclamation-triangle"></i> Device Returns</h3>
+                    <h3><img src="https://cdn-icons-png.flaticon.com/512/11449/11449946.png" alt="" style="height: 60px; width: 60px;"> Device Returns</h3>
                     <p>Devices that cannot be repaired and need to be returned</p>
                 </div>
                 <div class="devices-grid" id="returnsDevices">
@@ -494,6 +499,34 @@
 </div>
     </div>
 </div>
+<div class="whatsapp-intro-modal" id="whatsappIntroModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeIntroModal()" aria-label="Close">&times;</button>
+    <div class="modal-image-area">
+      <img src="https://png.pngtree.com/png-vector/20230510/ourmid/pngtree-new-feature---banner-speech-bubble-label-sticker-ribbon-vector-png-image_7092161.png" /> 
+    </div>
+    <div class="modal-header">
+      <h3>Introducing New WhatsApp notification feature</h3>
+    </div>
+    <div class="modal-body">
+      <ul>
+        <li>Easily notify customers about repair status via WhatsApp.</li>
+        <li>Payment Collections tab > Notify Customer > Copy Message > Open WhatsApp</li>
+        <li>Send Hindi/English messages seamlessly.</li>
+        
+      </ul>
+      
+    </div>
+    <div class="modal-footer">
+      <button class="btn primary" onclick="closeIntroModal()">OK, Got it!</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
     <script src="firebase-config.js"></script>

@@ -590,7 +590,6 @@ const whatsappTemplates = {
 Good news! Your *${device.deviceBrand} ${device.deviceModel}* has been successfully repaired and is ready for pickup! ✅
 
 📋 *Ticket ID:* ${device.ticketId}
-💰 *Amount to Pay:* ₹${device.estimatedCost}
 📍 *Location:* PhoneCare, Shop No 27, Mahanadi Complex, Niharika, Korba
 
 Please visit us at your convenience to collect your device and complete the payment.
@@ -606,7 +605,6 @@ Thank you for choosing PhoneCare! 😊`,
 खुशखबरी! आपका *${device.deviceBrand} ${device.deviceModel}* सफलतापूर्वक रिपेयर हो गया है और लेने के लिए तैयार है! ✅
 
 📋 *टिकट आईडी:* ${device.ticketId}
-💰 *भुगतान राशि:* ₹${device.estimatedCost}
 📍 *पता:* फोनकेयर, शॉप नं 27, महानदी कॉम्प्लेक्स, निहारिका, कोरबा
 
 कृपया अपनी सुविधानुसार हमारे पास आएं और अपना डिवाइस लेकर भुगतान पूरा करें।
@@ -716,6 +714,28 @@ function updateMessagePreview() {
     const message = whatsappTemplates[currentWhatsAppType][selectedLanguage](currentWhatsAppDevice);
     document.getElementById('messagePreview').textContent = message;
 }
+function isTodayOct12_2025() {
+    const now = new Date();
+    return now.getFullYear() === 2025 && (now.getMonth() + 1) === 10 && now.getDate() === 12;
+}
+function showWhatsAppIntroModal() {
+    if (isTodayOct12_2025()) {
+        const modal = document.getElementById('whatsappIntroModal');
+        if (modal) {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+}
+function closeIntroModal() {
+    const modal = document.getElementById('whatsappIntroModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+}
+document.addEventListener('DOMContentLoaded', showWhatsAppIntroModal);
+window.closeIntroModal = closeIntroModal;
 
 // Send WhatsApp message using free WhatsApp Web API
 // THIS IS THE MOST RELIABLE METHOD
